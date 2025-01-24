@@ -33,7 +33,7 @@ namespace TechBubble.Controllers
                 for (int i = _spawnedInvestmentBehaviors.Count - 1; i >= 0; i--)
                 {
                     var investmentBehavior = _spawnedInvestmentBehaviors[i];
-                    if ((playerPos - (Vector2)investmentBehavior.transform.position).sqrMagnitude < despawnDistSq)
+                    if ((playerPos - (Vector2)investmentBehavior.transform.position).sqrMagnitude > despawnDistSq)
                     {
                         _investmentPool.Despawn(investmentBehavior);
                         _spawnedInvestmentBehaviors.RemoveAt(i);
@@ -45,7 +45,7 @@ namespace TechBubble.Controllers
                 {
                     var angle = (Vector2.SignedAngle(Vector2.up, _playerBehaviour.MovementDirection) +
                                 Random.Range(-45f, 45f)) * Mathf.Deg2Rad;
-                    var pos = playerPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                    var pos = playerPos + new Vector2(-Mathf.Sin(angle), Mathf.Cos(angle)) * _gameRules.SpawnRadius;
                     SpawnInvestmentBehavior(pos);
                 }
             }
