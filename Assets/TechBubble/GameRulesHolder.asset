@@ -19,4 +19,10 @@ MonoBehaviour:
   deadlineMaxDist: 20
   deadlineMinDist: 12
   startMoney: 10000
-  investorPossibilities: e803000000000000d0070000000000008813000000000000
+  investorPossibilities:
+  - Money: 1000
+    Deadline: 10
+  - Money: 2000
+    Deadline: 8
+  - Money: 5000
+    Deadline: 5

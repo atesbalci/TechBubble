@@ -13,7 +13,7 @@ namespace TechBubble.Behaviors
         public float DeadlineMaxDist => deadlineMaxDist;
         public float DeadlineMinDist => deadlineMinDist;
         public long StartMoney => startMoney;
-        public long[] InvestorPossibilities => investorPossibilities;
+        public InvestmentData[] InvestorPossibilities => investorPossibilities;
 
         [SerializeField] private float spawnRadius;
         [SerializeField] private float despawnRadius;
@@ -22,6 +22,6 @@ namespace TechBubble.Behaviors
         [SerializeField] private float deadlineMaxDist;
         [SerializeField] private float deadlineMinDist;
         [SerializeField] private long startMoney;
-        [SerializeField] private long[] investorPossibilities;
+        [SerializeField] private InvestmentData[] investorPossibilities;
     }
 }

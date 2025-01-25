@@ -1,3 +1,5 @@
+using System;
+
 namespace TechBubble.Models
 {
     public interface IGameRules
@@ -9,6 +11,13 @@ namespace TechBubble.Models
         float DeadlineMaxDist { get; }
         float DeadlineMinDist { get; }
         long StartMoney { get; }
-        long[] InvestorPossibilities { get; }
+        InvestmentData[] InvestorPossibilities { get; }
+    }
+
+    [Serializable]
+    public struct InvestmentData
+    {
+        public long Money;
+        public float Deadline;
     }
 }

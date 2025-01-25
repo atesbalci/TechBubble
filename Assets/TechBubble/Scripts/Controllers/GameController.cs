@@ -3,15 +3,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using TechBubble.Behaviors;
 using TechBubble.Models;
-using Unity.Mathematics.Geometry;
 using UnityEngine;
 
 namespace TechBubble.Controllers
 {
     public class GameController : IGameState, IDeadlinesProvider
     {
+        public event IDeadlinesProvider.DeadlineEvent OnDeadlineCreated;
+        public event IDeadlinesProvider.DeadlineEvent OnDeadlineReached;
+        public event IDeadlinesProvider.DeadlineEvent OnDeadlineFailed;
+        
         public long Money { get; private set; }
-        public ICollection<DeadlineBehavior> Deadlines => _spawnedDeadlineBehaviors;
         
         private readonly IGameRules _gameRules;
         private readonly InvestmentPool _investmentPool;
@@ -34,6 +36,7 @@ namespace TechBubble.Controllers
             playerBehaviour.Money = _gameRules.StartMoney;
             _ = InvestmentSpawnLoop(CancellationToken.None);
             _ = SpendingLoop(CancellationToken.None);
+            _ = DeadlinesLoop(CancellationToken.None);
         }
 
         private void OnPickupableCollision(PickupableBehaviour pickupable)
@@ -48,16 +51,17 @@ namespace TechBubble.Controllers
                             _investmentPool.Despawn(investmentBehavior);
                             _spawnedInvestmentBehaviors.Remove(investmentBehavior);
                         });
-                        SpawnDeadlineBehavior();
+                        SpawnDeadlineBehavior(investmentBehavior.InvestmentData);
                         _playerBehaviour.Money += investmentBehavior.Money;
                     }
 
                     break;
                 case DeadlineBehavior deadlineBehavior:
+                    _spawnedDeadlineBehaviors.Remove(deadlineBehavior);
+                    OnDeadlineReached?.Invoke(deadlineBehavior);
                     pickupable.Consume(_playerBehaviour.transform, () =>
                     {
                         _deadlinePool.Despawn(deadlineBehavior);
-                        _spawnedDeadlineBehaviors.Remove(deadlineBehavior);
                     });
                     break;
             }
@@ -106,19 +110,39 @@ namespace TechBubble.Controllers
         private void SpawnInvestmentBehavior(Vector2 spawnPos)
         {
             var investment = _investmentPool.Spawn();
-            investment.Money =
+            investment.InvestmentData =
                 _gameRules.InvestorPossibilities[Random.Range(0, _gameRules.InvestorPossibilities.Length)];
             investment.transform.position = spawnPos;
             _spawnedInvestmentBehaviors.Add(investment);
         }
 
-        private void SpawnDeadlineBehavior()
+        private void SpawnDeadlineBehavior(InvestmentData investmentData)
         {
             var deadline = _deadlinePool.Spawn();
             _spawnedDeadlineBehaviors.Add(deadline);
             Vector2 playerPos = _playerBehaviour.transform.position;
             var pos = playerPos + Random.Range(_gameRules.DeadlineMinDist, _gameRules.DeadlineMaxDist) * Random.insideUnitCircle.normalized;
-            deadline.Initialize(0f, pos);
+            deadline.Initialize(investmentData, pos);
+            OnDeadlineCreated?.Invoke(deadline);
+        }
+
+        private async Task DeadlinesLoop(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                for (int i = _spawnedDeadlineBehaviors.Count - 1; i >= 0; i--)
+                {
+                    var deadlineBehavior = _spawnedDeadlineBehaviors[i];
+                    if (deadlineBehavior.DeadlineTime < Time.time)
+                    {
+                        _spawnedDeadlineBehaviors.RemoveAt(i);
+                        _deadlinePool.Despawn(deadlineBehavior);
+                        _playerBehaviour.Money -= deadlineBehavior.Money;
+                        OnDeadlineFailed?.Invoke(deadlineBehavior);
+                    }
+                }
+                await Awaitable.NextFrameAsync(cancellationToken);
+            }
         }
     }
 }

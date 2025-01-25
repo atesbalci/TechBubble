@@ -4,6 +4,10 @@ namespace TechBubble.Behaviors
 {
     public interface IDeadlinesProvider
     {
-        ICollection<DeadlineBehavior> Deadlines { get; }
+        public delegate void DeadlineEvent(DeadlineBehavior deadlineBehavior);
+        
+        event DeadlineEvent OnDeadlineCreated;
+        event DeadlineEvent OnDeadlineReached;
+        event DeadlineEvent OnDeadlineFailed;
     }
 }
