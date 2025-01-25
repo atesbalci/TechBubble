@@ -1,14 +1,16 @@
 using System;
+using TMPro;
 using UnityEngine;
 
 namespace TechBubble.Behaviors
 {
-    public class PlayerBehaviour : MonoBehaviour
+    public class PlayerBehaviour : MonoBehaviour, IMoneyActor
     {
         public event Action<PickupableBehaviour> OnPickupableBehaviourCollision;
         
         public Vector2 MovementDirection { get; private set; }
         public float Speed { get; set; }
+        public long Money { get; set; }
 
         public void SetMovementDirection(Vector2 movementDirection)
         {

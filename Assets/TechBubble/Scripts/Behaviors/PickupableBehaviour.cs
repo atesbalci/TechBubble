@@ -24,6 +24,7 @@ namespace TechBubble.Behaviors
 
         public void Consume(Transform target, Action despawnAction)
         {
+            _collider.enabled = false;
             _tween.Kill();
             _tween = DOTween.Sequence()
                 .Append(transform.DOMove(target.position, 0.5f))

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3663408121485811212}
   - component: {fileID: 2095858579477296229}
   m_Layer: 0
-  m_Name: Dealine
+  m_Name: Deadline
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -31,7 +31,9 @@ namespace TechBubble.Controllers
             _playerBehaviour = playerBehaviour;
             _playerBehaviour.OnPickupableBehaviourCollision += OnPickupableCollision;
             playerBehaviour.Speed = 5;
+            playerBehaviour.Money = _gameRules.StartMoney;
             _ = InvestmentSpawnLoop(CancellationToken.None);
+            _ = SpendingLoop(CancellationToken.None);
         }
 
         private void OnPickupableCollision(PickupableBehaviour pickupable)
@@ -39,12 +41,17 @@ namespace TechBubble.Controllers
             switch (pickupable)
             {
                 case InvestmentBehavior investmentBehavior:
-                    pickupable.Consume(_playerBehaviour.transform, () =>
+                    if (_playerBehaviour.Money >= investmentBehavior.Money)
                     {
-                        _investmentPool.Despawn(investmentBehavior);
-                        _spawnedInvestmentBehaviors.Remove(investmentBehavior);
-                    });
-                    SpawnDeadlineBehavior();
+                        pickupable.Consume(_playerBehaviour.transform, () =>
+                        {
+                            _investmentPool.Despawn(investmentBehavior);
+                            _spawnedInvestmentBehaviors.Remove(investmentBehavior);
+                        });
+                        SpawnDeadlineBehavior();
+                        _playerBehaviour.Money += investmentBehavior.Money;
+                    }
+
                     break;
                 case DeadlineBehavior deadlineBehavior:
                     pickupable.Consume(_playerBehaviour.transform, () =>
@@ -53,6 +60,18 @@ namespace TechBubble.Controllers
                         _spawnedDeadlineBehaviors.Remove(deadlineBehavior);
                     });
                     break;
+            }
+        }
+
+        private async Task SpendingLoop(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var newMoney = _playerBehaviour.Money - Mathf.RoundToInt(_gameRules.MoneyLossPerDistance * Time.deltaTime *
+                                                           _playerBehaviour.MovementDirection.magnitude *
+                                                           _playerBehaviour.Speed);
+                _playerBehaviour.Money = newMoney;
+                await Awaitable.NextFrameAsync(cancellationToken);
             }
         }
 
@@ -87,6 +106,8 @@ namespace TechBubble.Controllers
         private void SpawnInvestmentBehavior(Vector2 spawnPos)
         {
             var investment = _investmentPool.Spawn();
+            investment.Money =
+                _gameRules.InvestorPossibilities[Random.Range(0, _gameRules.InvestorPossibilities.Length)];
             investment.transform.position = spawnPos;
             _spawnedInvestmentBehaviors.Add(investment);
         }
