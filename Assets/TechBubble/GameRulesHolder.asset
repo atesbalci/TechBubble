@@ -15,3 +15,6 @@ MonoBehaviour:
   spawnRadius: 12
   despawnRadius: 15
   maxSpawnedInvestmentCount: 5
+  moneyLossPerDistance: 0
+  deadlineMaxDist: 20
+  deadlineMinDist: 12

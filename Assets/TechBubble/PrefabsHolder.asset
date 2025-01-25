@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: PrefabsHolder
   m_EditorClassIdentifier: 
   investmentPrefab: {fileID: 59070930883818034, guid: 41140b63e7c8ae54eb12a0f994bfdd64, type: 3}
+  deadlinePrefab: {fileID: 59070930883818034, guid: 03bb65e66632d4f4da2c35ebadd27e79, type: 3}

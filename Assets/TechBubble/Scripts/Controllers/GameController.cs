@@ -3,27 +3,60 @@ using System.Threading;
 using System.Threading.Tasks;
 using TechBubble.Behaviors;
 using TechBubble.Models;
+using Unity.Mathematics.Geometry;
 using UnityEngine;
 
 namespace TechBubble.Controllers
 {
-    public class GameController
+    public class GameController : IGameState, IDeadlinesProvider
     {
+        public long Money { get; private set; }
+        public ICollection<DeadlineBehavior> Deadlines => _spawnedDeadlineBehaviors;
+        
         private readonly IGameRules _gameRules;
         private readonly InvestmentPool _investmentPool;
+        private readonly DeadlinePool _deadlinePool;
         private readonly PlayerBehaviour _playerBehaviour;
         private readonly IList<InvestmentBehavior> _spawnedInvestmentBehaviors;
+        private readonly IList<DeadlineBehavior> _spawnedDeadlineBehaviors;
 
-        public GameController(IGameRules gameRules, InvestmentPool investmentPool, PlayerBehaviour playerBehaviour)
+        public GameController(IGameRules gameRules, InvestmentPool investmentPool, PlayerBehaviour playerBehaviour,
+            DeadlinePool deadlinePool)
         {
             _spawnedInvestmentBehaviors = new List<InvestmentBehavior>();
+            _spawnedDeadlineBehaviors = new List<DeadlineBehavior>();
             _gameRules = gameRules;
             _investmentPool = investmentPool;
+            _deadlinePool = deadlinePool;
             _playerBehaviour = playerBehaviour;
-            _ = GameLoop(CancellationToken.None);
+            _playerBehaviour.OnPickupableBehaviourCollision += OnPickupableCollision;
+            playerBehaviour.Speed = 5;
+            _ = InvestmentSpawnLoop(CancellationToken.None);
         }
 
-        private async Task GameLoop(CancellationToken cancellationToken)
+        private void OnPickupableCollision(PickupableBehaviour pickupable)
+        {
+            switch (pickupable)
+            {
+                case InvestmentBehavior investmentBehavior:
+                    pickupable.Consume(_playerBehaviour.transform, () =>
+                    {
+                        _investmentPool.Despawn(investmentBehavior);
+                        _spawnedInvestmentBehaviors.Remove(investmentBehavior);
+                    });
+                    SpawnDeadlineBehavior();
+                    break;
+                case DeadlineBehavior deadlineBehavior:
+                    pickupable.Consume(_playerBehaviour.transform, () =>
+                    {
+                        _deadlinePool.Despawn(deadlineBehavior);
+                        _spawnedDeadlineBehaviors.Remove(deadlineBehavior);
+                    });
+                    break;
+            }
+        }
+
+        private async Task InvestmentSpawnLoop(CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -56,6 +89,15 @@ namespace TechBubble.Controllers
             var investment = _investmentPool.Spawn();
             investment.transform.position = spawnPos;
             _spawnedInvestmentBehaviors.Add(investment);
+        }
+
+        private void SpawnDeadlineBehavior()
+        {
+            var deadline = _deadlinePool.Spawn();
+            _spawnedDeadlineBehaviors.Add(deadline);
+            Vector2 playerPos = _playerBehaviour.transform.position;
+            var pos = playerPos + Random.Range(_gameRules.DeadlineMinDist, _gameRules.DeadlineMaxDist) * Random.insideUnitCircle.normalized;
+            deadline.Initialize(0f, pos);
         }
     }
 }

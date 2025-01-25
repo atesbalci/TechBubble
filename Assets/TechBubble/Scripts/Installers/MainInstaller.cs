@@ -17,10 +17,12 @@ namespace TechBubble.Installers
             Container.BindInstance<IGameRules>(gameRulesHolder).AsSingle();
             Container.BindMemoryPool<InvestmentBehavior, InvestmentPool>()
                 .WithInitialSize(gameRulesHolder.MaxSpawnedInvestmentCount)
-                .FromComponentInNewPrefab(prefabsHolder.InvestmentPrefab)
-                .AsSingle();
+                .FromComponentInNewPrefab(prefabsHolder.InvestmentPrefab);
+            Container.BindMemoryPool<DeadlineBehavior, DeadlinePool>()
+                .WithInitialSize(10)
+                .FromComponentInNewPrefab(prefabsHolder.DeadlinePrefab);
             Container.BindInstance(playerBehaviour).AsSingle();
-            Container.Bind<GameController>().AsSingle().NonLazy();
+            Container.Bind<IDeadlinesProvider>().To<GameController>().AsSingle().NonLazy();
         }
     }
 }

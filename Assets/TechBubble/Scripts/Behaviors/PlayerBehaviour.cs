@@ -5,7 +5,10 @@ namespace TechBubble.Behaviors
 {
     public class PlayerBehaviour : MonoBehaviour
     {
+        public event Action<PickupableBehaviour> OnPickupableBehaviourCollision;
+        
         public Vector2 MovementDirection { get; private set; }
+        public float Speed { get; set; }
 
         public void SetMovementDirection(Vector2 movementDirection)
         {
@@ -14,7 +17,15 @@ namespace TechBubble.Behaviors
 
         private void Update()
         {
-            transform.position += (Vector3) MovementDirection * Time.deltaTime * 5f;
+            transform.position += (Vector3) MovementDirection * Time.deltaTime * Speed;
+        }
+
+        private void OnCollisionEnter2D(Collision2D other)
+        {
+            if (other.gameObject.TryGetComponent<PickupableBehaviour>(out var pickupable))
+            {
+                OnPickupableBehaviourCollision?.Invoke(pickupable);
+            }
         }
     }
 }

@@ -2,8 +2,11 @@ namespace TechBubble.Models
 {
     public interface IGameRules
     {
-        public float SpawnRadius { get; }
-        public float DespawnRadius { get; }
-        public int MaxSpawnedInvestmentCount { get; }
+        float SpawnRadius { get; }
+        float DespawnRadius { get; }
+        int MaxSpawnedInvestmentCount { get; }
+        float MoneyLossPerDistance { get; }
+        float DeadlineMaxDist { get; }
+        float DeadlineMinDist { get; }
     }
 }
