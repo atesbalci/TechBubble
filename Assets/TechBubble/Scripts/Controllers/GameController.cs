@@ -1,26 +1,32 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TechBubble.Behaviors;
 using TechBubble.Models;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace TechBubble.Controllers
 {
-    public class GameController : IGameState, IDeadlinesProvider
+    public class GameController : IGameState, IDeadlinesProvider, IDisposable
     {
-        public event IDeadlinesProvider.DeadlineEvent OnDeadlineCreated;
-        public event IDeadlinesProvider.DeadlineEvent OnDeadlineReached;
-        public event IDeadlinesProvider.DeadlineEvent OnDeadlineFailed;
+        public event DeadlineEvent OnDeadlineCreated;
+        public event DeadlineEvent OnDeadlineReached;
+        public event DeadlineEvent OnDeadlineFailed;
+        public event Action OnGameOver;
         
-        public long Money { get; private set; }
-        
+        public long Money => _playerBehaviour.Money;
+        public bool IsGameOver => Money <= 0;
+        public int InvestmentsSurvived { get; private set; }
+
         private readonly IGameRules _gameRules;
         private readonly InvestmentPool _investmentPool;
         private readonly DeadlinePool _deadlinePool;
         private readonly PlayerBehaviour _playerBehaviour;
         private readonly IList<InvestmentBehavior> _spawnedInvestmentBehaviors;
         private readonly IList<DeadlineBehavior> _spawnedDeadlineBehaviors;
+        private readonly CancellationTokenSource _cancellationToken;
 
         public GameController(IGameRules gameRules, InvestmentPool investmentPool, PlayerBehaviour playerBehaviour,
             DeadlinePool deadlinePool)
@@ -34,9 +40,20 @@ namespace TechBubble.Controllers
             _playerBehaviour.OnPickupableBehaviourCollision += OnPickupableCollision;
             playerBehaviour.Speed = 5;
             playerBehaviour.Money = _gameRules.StartMoney;
-            _ = InvestmentSpawnLoop(CancellationToken.None);
-            _ = SpendingLoop(CancellationToken.None);
-            _ = DeadlinesLoop(CancellationToken.None);
+            _cancellationToken = new CancellationTokenSource();
+            _ = GameLoop(_cancellationToken.Token);
+        }
+
+        public void Dispose()
+        {
+            _cancellationToken.Cancel();
+        }
+
+        private async Task GameLoop(CancellationToken cancellationToken)
+        {
+            await Task.WhenAll(InvestmentSpawnLoop(cancellationToken), SpendingLoop(cancellationToken),
+                DeadlinesLoop(cancellationToken));
+            OnGameOver?.Invoke();
         }
 
         private void OnPickupableCollision(PickupableBehaviour pickupable)
@@ -59,6 +76,7 @@ namespace TechBubble.Controllers
                 case DeadlineBehavior deadlineBehavior:
                     _spawnedDeadlineBehaviors.Remove(deadlineBehavior);
                     OnDeadlineReached?.Invoke(deadlineBehavior);
+                    InvestmentsSurvived++;
                     pickupable.Consume(_playerBehaviour.transform, () =>
                     {
                         _deadlinePool.Despawn(deadlineBehavior);
@@ -69,7 +87,7 @@ namespace TechBubble.Controllers
 
         private async Task SpendingLoop(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!IsGameOver)
             {
                 var newMoney = _playerBehaviour.Money - Mathf.RoundToInt(_gameRules.MoneyLossPerDistance * Time.deltaTime *
                                                            _playerBehaviour.MovementDirection.magnitude *
@@ -81,7 +99,7 @@ namespace TechBubble.Controllers
 
         private async Task InvestmentSpawnLoop(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!IsGameOver)
             {
                 await Awaitable.WaitForSecondsAsync(3f, cancellationToken);
                 float despawnDistSq = _gameRules.DespawnRadius * _gameRules.DespawnRadius;
@@ -128,7 +146,7 @@ namespace TechBubble.Controllers
 
         private async Task DeadlinesLoop(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!IsGameOver)
             {
                 for (int i = _spawnedDeadlineBehaviors.Count - 1; i >= 0; i--)
                 {

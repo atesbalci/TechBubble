@@ -25,7 +25,7 @@ namespace TechBubble.Installers
                 .WithInitialSize(10)
                 .FromComponentInNewPrefab(prefabsHolder.DeadlinePrefab);
             Container.BindInstance(playerBehaviour).AsSingle();
-            Container.Bind<IDeadlinesProvider>().To<GameController>().AsSingle().NonLazy();
+            Container.BindInterfacesTo<GameController>().AsSingle().NonLazy();
         }
     }
 }
