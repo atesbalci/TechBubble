@@ -13,6 +13,7 @@ namespace TechBubble.Installers
         [SerializeField] private PrefabsHolder prefabsHolder;
         [SerializeField] private ViewDataHolder viewDataHolder;
         [SerializeField] private PlayerBehaviour playerBehaviour;
+        [SerializeField] private AssholeInvestorView assholeInvestorView;
         
         public override void InstallBindings()
         {
@@ -25,6 +26,7 @@ namespace TechBubble.Installers
                 .WithInitialSize(10)
                 .FromComponentInNewPrefab(prefabsHolder.DeadlinePrefab);
             Container.BindInstance(playerBehaviour).AsSingle();
+            Container.BindInstance<IAssholeInvestorAnimator>(assholeInvestorView).AsSingle();
             Container.BindInterfacesTo<GameController>().AsSingle().NonLazy();
         }
     }

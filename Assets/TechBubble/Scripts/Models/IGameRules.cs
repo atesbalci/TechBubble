@@ -10,6 +10,8 @@ namespace TechBubble.Models
         float MoneyLossPerDistance { get; }
         float DeadlineMaxDist { get; }
         float DeadlineMinDist { get; }
+        float DeadlineLongDist { get; }
+        float DeadlineLongDistPossibility { get; }
         long StartMoney { get; }
         InvestmentData[] InvestorPossibilities { get; }
     }

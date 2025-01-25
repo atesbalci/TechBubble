@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TechBubble.Behaviors;
 using TechBubble.Models;
+using TechBubble.Views;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -24,12 +25,13 @@ namespace TechBubble.Controllers
         private readonly InvestmentPool _investmentPool;
         private readonly DeadlinePool _deadlinePool;
         private readonly PlayerBehaviour _playerBehaviour;
+        private readonly IAssholeInvestorAnimator _assholeInvestorAnimator;
         private readonly IList<InvestmentBehavior> _spawnedInvestmentBehaviors;
         private readonly IList<DeadlineBehavior> _spawnedDeadlineBehaviors;
         private readonly CancellationTokenSource _cancellationToken;
 
         public GameController(IGameRules gameRules, InvestmentPool investmentPool, PlayerBehaviour playerBehaviour,
-            DeadlinePool deadlinePool)
+            DeadlinePool deadlinePool, IAssholeInvestorAnimator assholeInvestorAnimator)
         {
             _spawnedInvestmentBehaviors = new List<InvestmentBehavior>();
             _spawnedDeadlineBehaviors = new List<DeadlineBehavior>();
@@ -37,6 +39,7 @@ namespace TechBubble.Controllers
             _investmentPool = investmentPool;
             _deadlinePool = deadlinePool;
             _playerBehaviour = playerBehaviour;
+            _assholeInvestorAnimator = assholeInvestorAnimator;
             _playerBehaviour.OnPickupableBehaviourCollision += OnPickupableCollision;
             playerBehaviour.Speed = 5;
             playerBehaviour.Money = _gameRules.StartMoney;
@@ -51,8 +54,9 @@ namespace TechBubble.Controllers
 
         private async Task GameLoop(CancellationToken cancellationToken)
         {
-            await Task.WhenAll(InvestmentSpawnLoop(cancellationToken), SpendingLoop(cancellationToken),
+            await Task.WhenAny(InvestmentSpawnLoop(cancellationToken), SpendingLoop(cancellationToken),
                 DeadlinesLoop(cancellationToken));
+            _playerBehaviour.LockInput();
             OnGameOver?.Invoke();
         }
 
@@ -68,7 +72,7 @@ namespace TechBubble.Controllers
                             _investmentPool.Despawn(investmentBehavior);
                             _spawnedInvestmentBehaviors.Remove(investmentBehavior);
                         });
-                        SpawnDeadlineBehavior(investmentBehavior.InvestmentData);
+                        _ = SpawnDeadlineBehavior(investmentBehavior.InvestmentData, _cancellationToken.Token);
                         _playerBehaviour.Money += investmentBehavior.Money;
                     }
 
@@ -134,14 +138,25 @@ namespace TechBubble.Controllers
             _spawnedInvestmentBehaviors.Add(investment);
         }
 
-        private void SpawnDeadlineBehavior(InvestmentData investmentData)
+        private async Task SpawnDeadlineBehavior(InvestmentData investmentData, CancellationToken cancellationToken)
         {
             var deadline = _deadlinePool.Spawn();
             _spawnedDeadlineBehaviors.Add(deadline);
             Vector2 playerPos = _playerBehaviour.transform.position;
-            var pos = playerPos + Random.Range(_gameRules.DeadlineMinDist, _gameRules.DeadlineMaxDist) * Random.insideUnitCircle.normalized;
+            bool isAsshole = Random.value < _gameRules.DeadlineLongDistPossibility;
+            float dist = isAsshole
+                ? _gameRules.DeadlineLongDist
+                : Random.Range(_gameRules.DeadlineMinDist, _gameRules.DeadlineMaxDist);
+            var pos = playerPos + dist * Random.insideUnitCircle.normalized;
             deadline.Initialize(investmentData, pos);
             OnDeadlineCreated?.Invoke(deadline);
+
+            if (isAsshole)
+            {
+                Time.timeScale = 0f;
+                await _assholeInvestorAnimator.ShowAnimation(investmentData, cancellationToken);
+                Time.timeScale = 1f;
+            }
         }
 
         private async Task DeadlinesLoop(CancellationToken cancellationToken)

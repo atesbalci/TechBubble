@@ -1,6 +1,6 @@
 using System;
-using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace TechBubble.Behaviors
 {
@@ -11,6 +11,13 @@ namespace TechBubble.Behaviors
         public Vector2 MovementDirection { get; private set; }
         public float Speed { get; set; }
         public long Money { get; set; }
+        
+        private PlayerInput _playerInput;
+
+        private void Start()
+        {
+            _playerInput = GetComponent<PlayerInput>();
+        }
 
         public void SetMovementDirection(Vector2 movementDirection)
         {
@@ -28,6 +35,11 @@ namespace TechBubble.Behaviors
             {
                 OnPickupableBehaviourCollision?.Invoke(pickupable);
             }
+        }
+
+        public void LockInput()
+        {
+            _playerInput.enabled = false;
         }
     }
 }

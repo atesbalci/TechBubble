@@ -17,7 +17,9 @@ MonoBehaviour:
   maxSpawnedInvestmentCount: 5
   moneyLossPerDistance: 100
   deadlineMaxDist: 20
-  deadlineMinDist: 12
+  deadlineMinDist: 10
+  deadlineLongDist: 25
+  deadlineLongDistPossibility: 0.2
   startMoney: 10000
   investorPossibilities:
   - Money: 1000
