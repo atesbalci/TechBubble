@@ -12,5 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fabfe1f3bc204b9688f508c24b427d10, type: 3}
   m_Name: ViewData
   m_EditorClassIdentifier: 
-  moneySizeMultiplier: 0.0012
-  minimumMoneySizeScale: 6
+  moneySizeMultiplier: 0.0002
+  minimumMoneySizeScale: 1
+  investorImages:
+  - {fileID: 21300000, guid: c66faaabb957b7048bee8420a3593872, type: 3}
+  - {fileID: 21300000, guid: 93d3d7c0e21891a42aeaaacb980fdee6, type: 3}
+  - {fileID: 21300000, guid: f307939a7dc11e64c9cbd2ff401fdec5, type: 3}
+  - {fileID: 21300000, guid: effa54e43e4104343b681b5027cd7bab, type: 3}
+  - {fileID: 21300000, guid: 9e95efbe0030d4f41af3f44c4f577d0c, type: 3}

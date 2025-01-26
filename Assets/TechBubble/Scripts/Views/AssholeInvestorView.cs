@@ -6,6 +6,7 @@ using TechBubble.Models;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 namespace TechBubble.Views
 {
@@ -17,9 +18,12 @@ namespace TechBubble.Views
         [SerializeField] private TMP_Text infoText;
         
         private Tween _tween;
+        private IViewData _viewData;
 
-        private void Start()
+        [Inject]
+        public void Initialize(IViewData viewData)
         {
+            _viewData = viewData;
             gameObject.SetActive(false);
         }
 
@@ -27,12 +31,12 @@ namespace TechBubble.Views
         {
             var tcs = new TaskCompletionSource<bool>();
             _tween.Kill();
+            investorImage.sprite = _viewData.GetInvestorIcon(investmentData.Id);
             gameObject.SetActive(true);
-            var blackClear = new Color(background.color.r, background.color.g, background.color.b, 0f);
-            background.color = blackClear;
+            background.color = Color.clear;
             investorImage.transform.localScale = 1.5f * Vector3.one;
-            investorImage.color = Color.clear;
-            infoText.color = blackClear;
+            investorImage.color = new Color(1f, 1f, 1f, 0f);
+            infoText.color = new Color(1f, 1f, 1f, 0f);
             strip.rectTransform.anchoredPosition = new Vector2(-1000f, 0f);
             _tween = DOTween.Sequence()
                 .SetUpdate(true)

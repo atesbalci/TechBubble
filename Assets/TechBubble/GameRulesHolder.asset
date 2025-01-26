@@ -20,11 +20,14 @@ MonoBehaviour:
   deadlineMinDist: 10
   deadlineLongDist: 25
   deadlineLongDistPossibility: 0.2
-  startMoney: 10000
+  startMoney: 1000
   investorPossibilities:
   - Money: 1000
     Deadline: 10
+    Id: 0
   - Money: 2000
     Deadline: 8
+    Id: 0
   - Money: 5000
     Deadline: 5
+    Id: 0

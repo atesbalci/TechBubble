@@ -21,5 +21,6 @@ namespace TechBubble.Models
     {
         public long Money;
         public float Deadline;
+        public int Id;
     }
 }

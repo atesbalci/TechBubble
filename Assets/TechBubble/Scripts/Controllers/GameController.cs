@@ -25,13 +25,14 @@ namespace TechBubble.Controllers
         private readonly InvestmentPool _investmentPool;
         private readonly DeadlinePool _deadlinePool;
         private readonly PlayerBehaviour _playerBehaviour;
+        private readonly IDeathAnimator _deathAnimator;
         private readonly IAssholeInvestorAnimator _assholeInvestorAnimator;
         private readonly IList<InvestmentBehavior> _spawnedInvestmentBehaviors;
         private readonly IList<DeadlineBehavior> _spawnedDeadlineBehaviors;
         private readonly CancellationTokenSource _cancellationToken;
 
         public GameController(IGameRules gameRules, InvestmentPool investmentPool, PlayerBehaviour playerBehaviour,
-            DeadlinePool deadlinePool, IAssholeInvestorAnimator assholeInvestorAnimator)
+            DeadlinePool deadlinePool, IAssholeInvestorAnimator assholeInvestorAnimator, IDeathAnimator deathAnimator)
         {
             _spawnedInvestmentBehaviors = new List<InvestmentBehavior>();
             _spawnedDeadlineBehaviors = new List<DeadlineBehavior>();
@@ -39,6 +40,7 @@ namespace TechBubble.Controllers
             _investmentPool = investmentPool;
             _deadlinePool = deadlinePool;
             _playerBehaviour = playerBehaviour;
+            _deathAnimator = deathAnimator;
             _assholeInvestorAnimator = assholeInvestorAnimator;
             _playerBehaviour.OnPickupableBehaviourCollision += OnPickupableCollision;
             playerBehaviour.Speed = 5;
@@ -57,6 +59,7 @@ namespace TechBubble.Controllers
             await Task.WhenAny(InvestmentSpawnLoop(cancellationToken), SpendingLoop(cancellationToken),
                 DeadlinesLoop(cancellationToken));
             _playerBehaviour.LockInput();
+            await _deathAnimator.AnimateDeath(cancellationToken);
             OnGameOver?.Invoke();
         }
 
@@ -132,8 +135,10 @@ namespace TechBubble.Controllers
         private void SpawnInvestmentBehavior(Vector2 spawnPos)
         {
             var investment = _investmentPool.Spawn();
-            investment.InvestmentData =
+            var investmentData =
                 _gameRules.InvestorPossibilities[Random.Range(0, _gameRules.InvestorPossibilities.Length)];
+            investmentData.Id = (int)(Random.value * int.MaxValue);
+            investment.Bind(investmentData);
             investment.transform.position = spawnPos;
             _spawnedInvestmentBehaviors.Add(investment);
         }

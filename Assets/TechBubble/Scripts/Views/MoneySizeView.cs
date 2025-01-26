@@ -23,7 +23,7 @@ namespace TechBubble.Views
 
         private void Update()
         {
-            moneyText.text = $"${_moneyActor.Money:N0}";
+            moneyText.text = _moneyActor.Money.ToMoneyString();
             var scale = Mathf.Max(_moneyActor.Money * _viewData.MoneySizeMultiplier, _viewData.MinimumMoneySizeScale);
             body.localScale = new Vector3(scale, scale, scale);
         }
