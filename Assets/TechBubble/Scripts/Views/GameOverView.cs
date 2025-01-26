@@ -22,7 +22,7 @@ namespace TechBubble.Views
 
         private void Show(int investmentRounds)
         {
-            infoText.text = $"You survived {investmentRounds} investment rounds";
+            infoText.text = $"You survived {investmentRounds} investment round(s)";
             gameObject.SetActive(true);
         }
     }

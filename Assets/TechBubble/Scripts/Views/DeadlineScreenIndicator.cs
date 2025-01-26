@@ -11,6 +11,7 @@ namespace TechBubble.Views
         [SerializeField] private RectTransform arrow;
         [SerializeField] private TMP_Text moneyText;
         [SerializeField] private TMP_Text timerText;
+        [SerializeField] private Vector2 worldOffset;
         
         private RectTransform RectTransform => (RectTransform) transform;
         
@@ -42,7 +43,7 @@ namespace TechBubble.Views
 
         private void Update()
         {
-            Vector2 viewportPoint = _camera.WorldToViewportPoint(_deadlineBehavior.transform.position);
+            Vector2 viewportPoint = _camera.WorldToViewportPoint(_deadlineBehavior.transform.position + (Vector3) worldOffset);
             viewportPoint.x = Mathf.Clamp01(viewportPoint.x);
             viewportPoint.y = Mathf.Clamp01(viewportPoint.y);
             var pos = viewportPoint * _canvasSize;

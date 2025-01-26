@@ -10,13 +10,11 @@ namespace TechBubble.Views
         [SerializeField] private DeadlineScreenIndicator templateIndicator;
         
         private IDictionary<DeadlineBehavior, DeadlineScreenIndicator> _spawnedIndicators;
-        private IDeadlinesProvider _deadlinesProvider;
 
         [Inject]
         public void Initialize(IDeadlinesProvider deadlinesProvider)
         {
             _spawnedIndicators = new Dictionary<DeadlineBehavior, DeadlineScreenIndicator>();
-            _deadlinesProvider = deadlinesProvider;
             templateIndicator.gameObject.SetActive(false);
             deadlinesProvider.OnDeadlineCreated += OnDeadlineCreated;
             deadlinesProvider.OnDeadlineReached += OnDeadlineDestroyed;
